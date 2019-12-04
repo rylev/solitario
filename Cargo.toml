@@ -1,0 +1,13 @@
+[package]
+name = "solitario"
+version = "0.1.0"
+authors = ["Ryan Levick <ryan.levick@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+async-task = { git = "https://github.com/async-rs/async-task" }
+
+[dev_dependencies]
+async-std = "1.2.0"
