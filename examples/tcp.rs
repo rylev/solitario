@@ -1,7 +1,7 @@
 use async_std::io;
 use async_std::net;
 use async_std::prelude::*;
-use solitario::task;
+use solitario::{task, RoundRobinWorkerPool};
 
 fn main() -> Result<(), Exception> {
     task::block_on(async {
@@ -9,12 +9,25 @@ fn main() -> Result<(), Exception> {
         let addr = format!("http://{}", listener.local_addr()?);
         println!("listening on {}", addr);
         let mut incoming = listener.incoming();
+        // create a worker pool
+        let pool = RoundRobinWorkerPool::new();
 
         while let Some(stream) = incoming.next().await {
-            task::spawn_on_worker(async move {
-                let stream = stream.unwrap();
-                let (reader, writer) = &mut (&stream, &stream);
-                io::copy(reader, writer).await.unwrap();
+            // get the next available worker
+            let worker = pool.get().await;
+            // spawn that worker
+            task::spawn_worker(worker, async {
+                // This async block is `Send` and therefore any work
+                // that requires access to items sent from the main thread
+                // can be done here, but this is still guranteed to happen
+                // on the worker thread
+                task::spawn_local(async {
+                    // This async block is !Send and thus does not require
+                    // locks around shared state (since state cannot be shared here
+                    let stream = stream.unwrap();
+                    let (reader, writer) = &mut (&stream, &stream);
+                    io::copy(reader, writer).await.unwrap();
+                })
             });
         }
         Ok(())

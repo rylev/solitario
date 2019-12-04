@@ -7,9 +7,18 @@ where
     unimplemented!();
 }
 
-pub fn spawn_on_worker<F, T>(_future: F)
+pub fn spawn_worker<F, T>(_worker: super::WorkerId, _future: F) -> JoinHandle
+where
+    F: Future<Output = T> + Send,
+{
+    unimplemented!();
+}
+
+pub fn spawn_local<F, T>(_future: F) -> JoinHandle
 where
     F: Future<Output = T>,
 {
     unimplemented!();
 }
+
+pub struct JoinHandle {}
